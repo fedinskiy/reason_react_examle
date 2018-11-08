@@ -6,5 +6,6 @@ let make = (~message, _children) => {
   <div>
     <button className="square">
       </button>
-  </div>}
+  </div>
+  }
 };
