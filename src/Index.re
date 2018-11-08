@@ -1,3 +1,2 @@
-ReactDOMRe.renderToElementWithId(<Component1 message="Hello!" />, "index1");
-
-ReactDOMRe.renderToElementWithId(<Component2 greeting="Hello!" />, "index2");
+/* ReactDOMRe.renderToElementWithId(<Component1 message="Hi!" />, "index1"); */
+ReactDOMRe.renderToElementWithId(<Square message="Hi!" />, "index1");
