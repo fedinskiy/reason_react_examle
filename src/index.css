@@ -39,10 +39,10 @@ ol, ul {
 .kbd-navigation .square:focus {
   background: #ddd;
 }
-
-.game {
+/*
+ .game {
   display: flex;
-  flex-direction: row;
+ flex-direction: row; */
 }
 
 .game-info {
