@@ -1,11 +1,12 @@
 module Square{
   let square = ReasonReact.statelessComponent("Some square");
 
-  let make = (~message, _children) => {
+  let make = (~message, ~value, _children) => {
     ...square,
     render: self =>{
     <div>
       <button className="square">
+          {ReasonReact.string(string_of_int(value))}
         </button>
     </div>
     }
@@ -15,12 +16,12 @@ module Square{
 module Board {
   let board = ReasonReact.statelessComponent("the board");
   let renderSquare=(i:int)=>{
-    <Square message="i"/>
+    <Square value={i} message=""/>
   };
   let make = (~message, _children) => {
     ...board,
     render: self =>{
-      let status = "Next player: X";
+      let status = "Next player: Y";
       <div>
       <div className="status">{ReasonReact.string(status)}</div>
       <div className="board-row">
