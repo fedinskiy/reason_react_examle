@@ -1,12 +1,28 @@
-module Square{
-  let square = ReasonReact.statelessComponent("Some square");
+[@bs.val] external alert : string => unit = "alert";
+
+module Square {
+  type state = {
+    clicked: bool
+  };
+
+  type action = Click ;
+
+  let square = ReasonReact.reducerComponent("Some square");
 
   let make = (~message, ~value, _children) => {
     ...square,
+
+    initialState: () => {clicked: false},
+    reducer: (action:action, state) => switch(action) {
+    | _ => ReasonReact.Update({clicked: !state.clicked})
+    },
+
     render: self =>{
     <div>
-      <button className="square">
-          {ReasonReact.string(string_of_int(value))}
+      <button className="square" onClick={_event=>self.send(Click)}>
+          {self.state.clicked
+            ? ReasonReact.string("X")
+            : ReasonReact.string(string_of_int(value))}
         </button>
     </div>
     }
@@ -21,7 +37,7 @@ module Board {
   let make = (~message, _children) => {
     ...board,
     render: self =>{
-      let status = "Next player: Y";
+      let status = "Next player: X";
       <div>
       <div className="status">{ReasonReact.string(status)}</div>
       <div className="board-row">
