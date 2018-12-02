@@ -1,8 +1,10 @@
 [@bs.val] external alert : string => unit = "alert";
 
+type clicked=First|Second|None
+
 module Square {
   type state = {
-    clicked: bool
+    clicked
   };
 
   type action = Click ;
@@ -12,17 +14,21 @@ module Square {
   let make = (~message, ~value, _children) => {
     ...square,
 
-    initialState: () => {clicked: false},
-    reducer: (action:action, state) => switch(action) {
-    | _ => ReasonReact.Update({clicked: !state.clicked})
+    initialState: () => {clicked: None},
+    reducer: (action:action, state) => switch(state.clicked) {
+      | First => ReasonReact.Update({clicked: Second})
+      | _ => ReasonReact.Update({clicked: First})
     },
 
     render: self =>{
     <div>
       <button className="square" onClick={_event=>self.send(Click)}>
-          {self.state.clicked
-            ? ReasonReact.string("X")
-            : ReasonReact.string(string_of_int(value))}
+          {switch(self.state.clicked){
+              | First => ReasonReact.string("X")
+              | Second => ReasonReact.string("Y")
+              | None => ReasonReact.string(string_of_int(value))
+            }
+          }
         </button>
     </div>
     }
