@@ -1,10 +1,16 @@
 [@bs.val] external alert : string => unit = "alert";
 
-type clicked=First|Second|None
-
+type clicked=First|Second|None;
+let show = (player:clicked):string=>{
+  switch(player){
+    | First => "X"
+    | Second => "O"
+    | None => ""
+  }
+}
 module Square {
   type state = {
-    clicked
+    wasClicked: clicked
   };
 
   type action = Click ;
@@ -14,21 +20,16 @@ module Square {
   let make = (~message, ~value, _children) => {
     ...square,
 
-    initialState: () => {clicked: None},
-    reducer: (action:action, state) => switch(state.clicked) {
-      | First => ReasonReact.Update({clicked: Second})
-      | _ => ReasonReact.Update({clicked: First})
+    initialState: () => {wasClicked: None},
+    reducer: (action:action, state:state) => switch(state.wasClicked) {
+      | First => ReasonReact.Update({wasClicked: Second})
+      | _ => ReasonReact.Update({wasClicked: First})
     },
 
     render: self =>{
     <div>
       <button className="square" onClick={_event=>self.send(Click)}>
-          {switch(self.state.clicked){
-              | First => ReasonReact.string("X")
-              | Second => ReasonReact.string("Y")
-              | None => ReasonReact.string(string_of_int(value))
-            }
-          }
+          {ReasonReact.string(show(self.state.wasClicked))}
         </button>
     </div>
     }
@@ -36,14 +37,21 @@ module Square {
 };
 
 module Board {
-  let board = ReasonReact.statelessComponent("the board");
-  let renderSquare=(i:int)=>{
-    <Square value={i} message=""/>
+  type state = {
+    vals:array(clicked)
   };
+  type action= Click;
+  let board = ReasonReact.reducerComponent("the board");
+
   let make = (~message, _children) => {
     ...board,
+    initialState: () =>{vals: Array.make(9,None)},
+    reducer: ((),state:state) => ReasonReact.NoUpdate,
     render: self =>{
       let status = "Next player: X";
+      let renderSquare=(i:int)=>{
+        <Square value={self.state.vals[i]} message=""/>
+      };
       <div>
       <div className="status">{ReasonReact.string(status)}</div>
       <div className="board-row">
@@ -62,9 +70,9 @@ module Board {
         {renderSquare(8)}
         </div>
         </div>
-      }
-    };
-};
+      },
+  };
+}
 
 module Game {
   let game = ReasonReact.statelessComponent("some game");
