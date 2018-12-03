@@ -1,7 +1,7 @@
 [@bs.val] external alert : string => unit = "alert";
 
-type clicked=First|Second|None;
-let show = (player:clicked):string=>{
+type player=First|Second|None;
+let show = (player:player):string=>{
   switch(player){
     | First => "X"
     | Second => "O"
@@ -9,12 +9,18 @@ let show = (player:clicked):string=>{
   }
 }
 
+let nextMove= (player)=>
+  switch(player) {
+    | First => Second
+    | _ => First
+  }
+
 module Square {
   let square = ReasonReact.statelessComponent("Some square");
 
-  let make = (~message, ~value, ~onClick, _children) => {
+  let make = (~message as _, ~value, ~onClick, _children) => {
     ...square,
-    render: self =>{
+    render: _self =>{
     <div>
       <button className="square" onClick={onClick}>
           {ReasonReact.string(show(value))}
@@ -23,27 +29,24 @@ module Square {
     }
   };
 };
-
 module Board {
   type state = {
-    vals:array(clicked)
+    vals:array(player),
+    next:player
   };
   type action= Click(int);
   let board = ReasonReact.reducerComponent("the board");
 
-  let make = (~message, _children) => {
+  let make = (~message as _, _children) => {
     ...board,
-    initialState: () =>{vals: Array.make(9,None)},
+    initialState: () =>{vals: Array.make(9,None), next: First},
     reducer: (action,state:state) => {
       let i = switch(action) {
         | Click(i)=>i;
       }
       let current=state.vals
-      current[i] = switch(current[i]) {
-        | First => Second
-        | _ => First
-      }
-      ReasonReact.Update({vals: current})
+      current[i] = nextMove(current[i])
+      ReasonReact.Update({...state, vals: current})
     },
     render: self =>{
       let status = "Next player: X";
@@ -79,9 +82,9 @@ module Board {
 module Game {
   let game = ReasonReact.statelessComponent("some game");
 
-  let make = (~message, _children) => {
+  let make = (~message as _, _children) => {
     ...game,
-    render: self =>{
+    render: _self =>{
       <div className="game">
         <div className="game-board">
           <Board message=""/>
