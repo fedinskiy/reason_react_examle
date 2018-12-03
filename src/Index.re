@@ -8,28 +8,16 @@ let show = (player:clicked):string=>{
     | None => ""
   }
 }
+
 module Square {
-  type state = {
-    wasClicked: clicked
-  };
+  let square = ReasonReact.statelessComponent("Some square");
 
-  type action = Click ;
-
-  let square = ReasonReact.reducerComponent("Some square");
-
-  let make = (~message, ~value, _children) => {
+  let make = (~message, ~value, ~onClick, _children) => {
     ...square,
-
-    initialState: () => {wasClicked: None},
-    reducer: (action:action, state:state) => switch(state.wasClicked) {
-      | First => ReasonReact.Update({wasClicked: Second})
-      | _ => ReasonReact.Update({wasClicked: First})
-    },
-
     render: self =>{
     <div>
-      <button className="square" onClick={_event=>self.send(Click)}>
-          {ReasonReact.string(show(self.state.wasClicked))}
+      <button className="square" onClick={onClick}>
+          {ReasonReact.string(show(value))}
         </button>
     </div>
     }
@@ -40,17 +28,31 @@ module Board {
   type state = {
     vals:array(clicked)
   };
-  type action= Click;
+  type action= Click(int);
   let board = ReasonReact.reducerComponent("the board");
 
   let make = (~message, _children) => {
     ...board,
     initialState: () =>{vals: Array.make(9,None)},
-    reducer: ((),state:state) => ReasonReact.NoUpdate,
+    reducer: (action,state:state) => {
+      let i = switch(action) {
+        | Click(i)=>i;
+      }
+      let current=state.vals
+      current[i] = switch(current[i]) {
+        | First => Second
+        | _ => First
+      }
+      ReasonReact.Update({vals: current})
+    },
     render: self =>{
       let status = "Next player: X";
+
       let renderSquare=(i:int)=>{
-        <Square value={self.state.vals[i]} message=""/>
+        <Square
+                value={self.state.vals[i]}
+                onClick={_event=>self.send(Click(i))}
+                message=""/>
       };
       <div>
       <div className="status">{ReasonReact.string(status)}</div>
