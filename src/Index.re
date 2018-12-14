@@ -18,7 +18,8 @@ let next = (player)=>
 type line=(int,int,int);
 type turn = {
   vals: array(player),
-  current: player
+  current: player,
+  num: int
 }
 let lineWinner = (line:line, board:array(player)):player=>{
     let (x,y,z)=line;
@@ -101,7 +102,7 @@ module Game {
 
   let make = (~message as _, _children) => {
     ...game,
-    initialState: () => {history:[{vals:Array.make(9,None),current: First}]},
+    initialState: () => {history:[{vals:Array.make(9,None),current: First,num:0}]},
     reducer: (action,state:state) => {
       let i = switch(action) {
         | Click(i)=>i;
@@ -113,6 +114,7 @@ module Game {
           ReasonReact.Update({
             history: [{
               vals: turn.vals,
+              num: turn.num+1,
               current:next(turn.current)},
               ...state.history],})}
         | _ => ReasonReact.NoUpdate
@@ -121,6 +123,15 @@ module Game {
     render: self =>{
       let [current, ..._] = self.state.history
       let winner = calculateWinner(current.vals);
+      let moves = self.state.history->ListLabels.map((turn)=>{
+        let desc = turn.num==0
+              ? "Go to game start"
+              : "Go to move #"++string_of_int(turn.num);
+
+          <li>
+            <button>{ReasonReact.string(desc)}</button>
+          </li>
+      })->ArrayLabels.of_list;
       let status = switch(winner){
         | None=>"Next player: "++show(current.current);
         | _ => "Winner: "++show(winner)};
@@ -134,7 +145,7 @@ module Game {
           <div className="game-info">
           <br/>
           <div>{ReasonReact.string(status)}</div>
-          <ol>{ReasonReact.null}</ol>
+          <ol>...moves</ol>
           </div>
           </div>
         }
