@@ -58,15 +58,16 @@ module Square {
 };
 module Board {
   type state = {
-    vals:array(player),
-    current:player
+    history: list(array(player)),
+    vals: array(player),
+    current: player
   };
   type action= Click(int);
   let board = ReasonReact.reducerComponent("the board");
 
   let make = (~message as _, _children) => {
     ...board,
-    initialState: () =>{vals: Array.make(9,None), current: First},
+    initialState: () =>{history:[],vals: Array.make(9,None), current: First},
     reducer: (action,state:state) => {
       let i = switch(action) {
         | Click(i)=>i;
@@ -74,7 +75,9 @@ module Board {
       switch(calculateWinner(state.vals), state.vals[i]){
         | (None, None) =>{
           state.vals[i] = state.current
-          ReasonReact.Update({vals: state.vals, current:next(state.current)})}
+          ReasonReact.Update({history: [state.vals,...state.history],
+                              vals: state.vals,
+                              current:next(state.current)})}
         | _ => ReasonReact.NoUpdate
       }
     },
