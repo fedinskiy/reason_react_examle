@@ -65,11 +65,6 @@ module Board {
   let make = (~message as _, ~handler, ~turn, _children) => {
     ...board,
     render: _self =>{
-      let winner = calculateWinner(turn.vals);
-      let status = switch(winner){
-        | None=>"Next player: "++show(turn.current);
-        | _ => "Winner: "++show(winner)};
-
       let renderSquare=(i:int)=>{
         <Square
                 value={turn.vals[i]}
@@ -77,7 +72,6 @@ module Board {
                 message=""/>
       };
       <div>
-      <div className="status">{ReasonReact.string(status)}</div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
@@ -100,38 +94,46 @@ module Board {
 
 module Game {
   type state = {
-    history: list(array(player)),
-    turn: turn
+    history: list(turn),
   };
   type action = Click(int);
   let game = ReasonReact.reducerComponent("some game");
 
   let make = (~message as _, _children) => {
     ...game,
-    initialState: () => {history:[],turn:{vals:Array.make(9,None),current: First}},
+    initialState: () => {history:[{vals:Array.make(9,None),current: First}]},
     reducer: (action,state:state) => {
       let i = switch(action) {
         | Click(i)=>i;
       }
-      switch(calculateWinner(state.turn.vals), state.turn.vals[i]){
+      let [turn, ..._] = state.history
+      switch(calculateWinner(turn.vals), turn.vals[i]){
         | (None, None) =>{
-          state.turn.vals[i] = state.turn.current
-          ReasonReact.Update({history: [state.turn.vals,...state.history],
-                              turn:{vals: state.turn.vals,
-                              current:next(state.turn.current)}})}
+          turn.vals[i] = turn.current
+          ReasonReact.Update({
+            history: [{
+              vals: turn.vals,
+              current:next(turn.current)},
+              ...state.history],})}
         | _ => ReasonReact.NoUpdate
       }
     },
     render: self =>{
+      let [current, ..._] = self.state.history
+      let winner = calculateWinner(current.vals);
+      let status = switch(winner){
+        | None=>"Next player: "++show(current.current);
+        | _ => "Winner: "++show(winner)};
       <div className="game">
         <div className="game-board">
           <Board
-            turn={self.state.turn}
+            turn={current}
             handler={(i:int)=>{_event=>self.send(Click(i))}}
             message=""/>
           </div>
           <div className="game-info">
-          <div>{ReasonReact.null}</div>
+          <br/>
+          <div>{ReasonReact.string(status)}</div>
           <ol>{ReasonReact.null}</ol>
           </div>
           </div>
