@@ -9,12 +9,39 @@ let show = (player:player):string=>{
   }
 }
 
-let nextMove= (player)=>
+let next = (player)=>
   switch(player) {
     | First => Second
     | _ => First
   }
 
+type line=(int,int,int);
+
+let lineWinner = (line:line, board:array(player)):player=>{
+    let (x,y,z)=line;
+    (board[x]==board[y])&&(board[y]==board[z])
+    ? board[x]
+    : None
+}
+
+let calculateWinner = (board:array(player))=>{
+    let lines=[(0,1,2),(3,4,5),(6,7,8),
+               (0,3,6),(1,4,7),(2,5,8),
+               (0,4,8),(2,4,6)]
+    let rec calculate = (lines:list(line)):player => {
+      switch (lines){
+        | [] => None
+        | [current, ...rest] => {
+          let winner = lineWinner(current,board)
+          switch(winner){
+            | None => calculate(rest)
+            | _ => winner
+          };
+        };
+      };
+    };
+    calculate(lines)
+}
 module Square {
   let square = ReasonReact.statelessComponent("Some square");
 
@@ -32,24 +59,26 @@ module Square {
 module Board {
   type state = {
     vals:array(player),
-    next:player
+    current:player
   };
   type action= Click(int);
   let board = ReasonReact.reducerComponent("the board");
 
   let make = (~message as _, _children) => {
     ...board,
-    initialState: () =>{vals: Array.make(9,None), next: First},
+    initialState: () =>{vals: Array.make(9,None), current: First},
     reducer: (action,state:state) => {
       let i = switch(action) {
         | Click(i)=>i;
       }
-      let current=state.vals
-      current[i] = nextMove(current[i])
-      ReasonReact.Update({...state, vals: current})
+      state.vals[i] = state.current
+      ReasonReact.Update({vals: state.vals, current:next(state.current)})
     },
     render: self =>{
-      let status = "Next player: X";
+      let winner = calculateWinner(self.state.vals);
+      let status = switch(winner){
+        | None=>"Next player: "++show(self.state.current);
+        | _ => "Winner: "++show(winner)};
 
       let renderSquare=(i:int)=>{
         <Square
