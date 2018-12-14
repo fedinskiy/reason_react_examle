@@ -9,6 +9,13 @@ let show = (player:player):string=>{
   }
 }
 
+let rec getFirstN=(list, n:int)=>{
+  switch(list,n){
+    | ([],_)=>[]
+    | (_,0)=>[]
+    | ([first, ...rest],_)=>[first, ...getFirstN(rest,n-1)]
+  }
+}
 let next = (player)=>
   switch(player) {
     | First => Second
@@ -18,7 +25,7 @@ let next = (player)=>
 type line=(int,int,int);
 type turn = {
   vals: array(player),
-  current: player,
+  player: player,
   num: int
 }
 let lineWinner = (line:line, board:array(player)):player=>{
@@ -96,45 +103,65 @@ module Board {
 module Game {
   type state = {
     history: list(turn),
+    shownTurn: int
   };
-  type action = Click(int);
+  type action = Click(int)|Step(int);
   let game = ReasonReact.reducerComponent("some game");
 
+  let processButtonPress=(button:int,state:state)=>{
+    let historyTillNow = state.history
+    let [turn, ..._] = historyTillNow
+
+    switch(calculateWinner(turn.vals), turn.vals[button]){
+      | (None, None) =>{
+        let values=Array.copy(turn.vals)
+        values[button] = turn.player
+        ReasonReact.Update({
+          shownTurn: state.shownTurn+1,
+          history: [{
+            vals: values,
+            num: turn.num+1,
+            player:next(turn.player)},
+            ...historyTillNow],})}
+      | _ => ReasonReact.NoUpdate
+    }
+  };
+  let processStepSwitch=(step:int,state:state)=>{
+    ReasonReact.Update({...state, shownTurn:step})
+  }
   let make = (~message as _, _children) => {
     ...game,
-    initialState: () => {history:[{vals:Array.make(9,None),current: First,num:0}]},
+    initialState: () => {history:[{vals:Array.make(9,None),player: First, num:0}],shownTurn:0},
     reducer: (action,state:state) => {
-      let i = switch(action) {
-        | Click(i)=>i;
-      }
-      let [turn, ..._] = state.history
-      switch(calculateWinner(turn.vals), turn.vals[i]){
-        | (None, None) =>{
-          turn.vals[i] = turn.current
-          ReasonReact.Update({
-            history: [{
-              vals: turn.vals,
-              num: turn.num+1,
-              current:next(turn.current)},
-              ...state.history],})}
-        | _ => ReasonReact.NoUpdate
+      switch(action) {
+        | Click(i)=>processButtonPress(i,state);
+        | Step(i)=>processStepSwitch(i,state);
       }
     },
     render: self =>{
-      let [current, ..._] = self.state.history
+      let current = {
+        let hist = self.state.history
+        let n = List.length(hist)-self.state.shownTurn
+        List.nth(hist,n-1)
+      }
       let winner = calculateWinner(current.vals);
-      let moves = self.state.history->ListLabels.map((turn)=>{
+      let moves = self.state.history->ListLabels.map(~f=(turn)=>{
         let desc = turn.num==0
               ? "Go to game start"
-              : "Go to move #"++string_of_int(turn.num);
+              : "Go to move #"++string_of_int(turn.num)++" "++show(turn.player);
 
           <li>
-            <button>{ReasonReact.string(desc)}</button>
+            <button
+                    key={string_of_int(turn.num)}
+                    onClick={_event=>self.send(Step(turn.num))}>
+                    {ReasonReact.string(desc)}
+            </button>
           </li>
       })->ArrayLabels.of_list;
       let status = switch(winner){
-        | None=>"Next player: "++show(current.current);
+        | None => "Next player: "++show(current.player);
         | _ => "Winner: "++show(winner)};
+
       <div className="game">
         <div className="game-board">
           <Board
