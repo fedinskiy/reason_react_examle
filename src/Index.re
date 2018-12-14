@@ -71,8 +71,8 @@ module Board {
       let i = switch(action) {
         | Click(i)=>i;
       }
-      switch(calculateWinner(state.vals)){
-        | None=>{
+      switch(calculateWinner(state.vals), state.vals[i]){
+        | (None, None) =>{
           state.vals[i] = state.current
           ReasonReact.Update({vals: state.vals, current:next(state.current)})}
         | _ => ReasonReact.NoUpdate
