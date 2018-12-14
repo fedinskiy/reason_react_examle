@@ -16,7 +16,10 @@ let next = (player)=>
   }
 
 type line=(int,int,int);
-
+type turn = {
+  vals: array(player),
+  current: player
+}
 let lineWinner = (line:line, board:array(player)):player=>{
     let (x,y,z)=line;
     (board[x]==board[y])&&(board[y]==board[z])
@@ -57,40 +60,20 @@ module Square {
   };
 };
 module Board {
-  type state = {
-    history: list(array(player)),
-    vals: array(player),
-    current: player
-  };
-  type action= Click(int);
-  let board = ReasonReact.reducerComponent("the board");
+  let board = ReasonReact.statelessComponent("the board");
 
-  let make = (~message as _, _children) => {
+  let make = (~message as _, ~handler, ~turn, _children) => {
     ...board,
-    initialState: () =>{history:[],vals: Array.make(9,None), current: First},
-    reducer: (action,state:state) => {
-      let i = switch(action) {
-        | Click(i)=>i;
-      }
-      switch(calculateWinner(state.vals), state.vals[i]){
-        | (None, None) =>{
-          state.vals[i] = state.current
-          ReasonReact.Update({history: [state.vals,...state.history],
-                              vals: state.vals,
-                              current:next(state.current)})}
-        | _ => ReasonReact.NoUpdate
-      }
-    },
-    render: self =>{
-      let winner = calculateWinner(self.state.vals);
+    render: _self =>{
+      let winner = calculateWinner(turn.vals);
       let status = switch(winner){
-        | None=>"Next player: "++show(self.state.current);
+        | None=>"Next player: "++show(turn.current);
         | _ => "Winner: "++show(winner)};
 
       let renderSquare=(i:int)=>{
         <Square
-                value={self.state.vals[i]}
-                onClick={_event=>self.send(Click(i))}
+                value={turn.vals[i]}
+                onClick=handler(i)
                 message=""/>
       };
       <div>
@@ -116,14 +99,36 @@ module Board {
 }
 
 module Game {
-  let game = ReasonReact.statelessComponent("some game");
+  type state = {
+    history: list(array(player)),
+    turn: turn
+  };
+  type action = Click(int);
+  let game = ReasonReact.reducerComponent("some game");
 
   let make = (~message as _, _children) => {
     ...game,
-    render: _self =>{
+    initialState: () => {history:[],turn:{vals:Array.make(9,None),current: First}},
+    reducer: (action,state:state) => {
+      let i = switch(action) {
+        | Click(i)=>i;
+      }
+      switch(calculateWinner(state.turn.vals), state.turn.vals[i]){
+        | (None, None) =>{
+          state.turn.vals[i] = state.turn.current
+          ReasonReact.Update({history: [state.turn.vals,...state.history],
+                              turn:{vals: state.turn.vals,
+                              current:next(state.turn.current)}})}
+        | _ => ReasonReact.NoUpdate
+      }
+    },
+    render: self =>{
       <div className="game">
         <div className="game-board">
-          <Board message=""/>
+          <Board
+            turn={self.state.turn}
+            handler={(i:int)=>{_event=>self.send(Click(i))}}
+            message=""/>
           </div>
           <div className="game-info">
           <div>{ReasonReact.null}</div>
