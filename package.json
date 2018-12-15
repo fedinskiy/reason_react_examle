@@ -1,14 +1,6 @@
 {
   "name": "tic-tac",
   "version": "0.1.0",
-  "scripts": {
-    "build": "bsb -make-world",
-    "start": "bsb -make-world -w",
-    "clean": "bsb -clean-world",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack -w",
-    "webpack:production": "NODE_ENV=production webpack"
-  },
   "keywords": [
     "BuckleScript"
   ],
@@ -21,7 +13,15 @@
   },
   "devDependencies": {
     "bs-platform": "^4.0.6",
-    "webpack": "^4.0.1",
-    "webpack-cli": "^3.1.1"
+    "webpack": "4.19.1",
+    "react-scripts": ">=2.1.1"
+  },
+  "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world",
+    "eject": "react-scripts eject",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "react-scripts start"
   }
 }
