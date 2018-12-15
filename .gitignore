@@ -6,3 +6,4 @@ npm-debug.log
 /lib/bs/
 /build
 /node_modules/
+package-lock.json
