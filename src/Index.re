@@ -153,7 +153,7 @@ module Game {
       let moves = self.state.history->ListLabels.map(~f=(turn)=>{
         let desc = turn.num==0
               ? "Go to game start"
-              : "Go to move #"++string_of_int(turn.num)++" "++show(turn.player);
+              : "Go to move #"++string_of_int(turn.num);
 
           <li>
             <button
