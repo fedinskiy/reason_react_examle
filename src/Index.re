@@ -99,7 +99,12 @@ module Board {
       },
   };
 }
-
+let rec shrinkToLength=(list:list('a), length:int)=>{
+  switch(List.length(list)==length){
+    | true => list;
+    | false => shrinkToLength(List.tl(list), length);
+  }
+}
 module Game {
   type state = {
     history: list(turn),
@@ -109,7 +114,11 @@ module Game {
   let game = ReasonReact.reducerComponent("some game");
 
   let processButtonPress=(button:int,state:state)=>{
-    let historyTillNow = state.history
+    let historyTillNow = {
+      let hist=state.history
+      let turn=state.shownTurn
+      shrinkToLength(hist,turn+1)
+    }
     let [turn, ..._] = historyTillNow
 
     switch(calculateWinner(turn.vals), turn.vals[button]){
