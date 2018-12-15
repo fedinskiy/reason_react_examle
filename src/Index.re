@@ -114,11 +114,7 @@ module Game {
   let game = ReasonReact.reducerComponent("some game");
 
   let processButtonPress=(button:int,state:state)=>{
-    let historyTillNow = {
-      let hist=state.history
-      let turn=state.shownTurn
-      shrinkToLength(hist,turn+1)
-    }
+    let historyTillNow = shrinkToLength(state.history, state.shownTurn+1)
     let [turn, ..._] = historyTillNow
 
     switch(calculateWinner(turn.vals), turn.vals[button]){
